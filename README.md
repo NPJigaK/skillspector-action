@@ -58,7 +58,7 @@ Fail CI only for the severities you care about:
 
 ## Examples
 
-These validation pull requests show the action running against real skill repositories:
+These pull requests show the released `@v1` action wired into real skill repositories:
 
 - [jq-cli-skill #7](https://github.com/NPJigaK/jq-cli-skill/pull/7)
 - [unified-adversarial-review-skill #10](https://github.com/NPJigaK/unified-adversarial-review-skill/pull/10)
