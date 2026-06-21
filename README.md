@@ -56,6 +56,15 @@ Fail CI only for the severities you care about:
 - Optional GitHub Code Scanning upload.
 - Opt-in CI failure with `fail-on` or `min-score`.
 
+## Examples
+
+These validation pull requests show the action running against real skill repositories:
+
+- [jq-cli-skill #7](https://github.com/NPJigaK/jq-cli-skill/pull/7)
+- [unified-adversarial-review-skill #10](https://github.com/NPJigaK/unified-adversarial-review-skill/pull/10)
+
+Use the Quick start workflow above for your own repository.
+
 ## Inputs
 
 | Input | Default | Description |

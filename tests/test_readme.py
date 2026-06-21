@@ -12,6 +12,8 @@ def test_readme_documents_core_usage_and_security_notes() -> None:
     assert "pull_request_target" in readme
     assert "LLM" in readme
     assert "baseline" in readme
+    assert "jq-cli-skill #7" in readme
+    assert "unified-adversarial-review-skill #10" in readme
     assert "docs/advanced-usage.md" in readme
     assert "docs/maintainer.md" in readme
 
