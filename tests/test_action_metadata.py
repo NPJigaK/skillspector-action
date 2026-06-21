@@ -33,7 +33,7 @@ def test_action_metadata_declares_inputs_outputs_and_composite_runtime() -> None
 def test_action_metadata_uploads_artifacts_and_sarif() -> None:
     action_text = Path("action.yml").read_text(encoding="utf-8")
 
-    assert "actions/upload-artifact@v4" in action_text
+    assert "actions/upload-artifact@v7" in action_text
     assert "github/codeql-action/upload-sarif@v4" in action_text
     assert "docker://ghcr.io/npjigak/skillspector-action:v1" not in action_text
     assert "scripts/run-action.sh" in action_text
