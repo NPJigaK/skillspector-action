@@ -14,6 +14,9 @@ def test_readme_documents_core_usage_and_security_notes() -> None:
     assert "baseline" in readme
     assert "jq-cli-skill #7" in readme
     assert "unified-adversarial-review-skill #10" in readme
+    assert "## Status badge" in readme
+    assert "actions/workflows/skillspector.yml/badge.svg?branch=main" in readme
+    assert "not a security certification" in readme
     assert "docs/advanced-usage.md" in readme
     assert "docs/maintainer.md" in readme
 
