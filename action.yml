@@ -1,0 +1,107 @@
+name: SkillSpector Action
+author: NPJigaK
+description: Scan AI agent skills with SkillSpector and publish JSON, SARIF, and Markdown reports.
+branding:
+  icon: shield
+  color: green
+
+inputs:
+  path:
+    description: Repository path or SKILL.md file to scan.
+    required: false
+    default: "."
+  changed-only:
+    description: Scan only changed skill directories on pull requests.
+    required: false
+    default: "false"
+  fail-on:
+    description: Failure threshold. One of none, high, critical.
+    required: false
+    default: "none"
+  min-score:
+    description: Optional numeric risk score threshold that fails the action.
+    required: false
+    default: ""
+  upload-sarif:
+    description: Upload the generated SARIF report to GitHub Code Scanning.
+    required: false
+    default: "false"
+  exclude:
+    description: Newline or comma separated glob patterns to exclude.
+    required: false
+    default: ""
+  baseline:
+    description: Optional baseline JSON path for suppressing accepted findings.
+    required: false
+    default: ""
+  llm:
+    description: Enable SkillSpector LLM analysis. Static --no-llm mode is used by default.
+    required: false
+    default: "false"
+  artifact-name:
+    description: Artifact name for generated reports.
+    required: false
+    default: skillspector-results
+  image:
+    description: Override scanner image for development.
+    required: false
+    default: ""
+
+outputs:
+  sarif:
+    description: Path to the generated SARIF report.
+    value: ${{ steps.scan.outputs.sarif }}
+  json:
+    description: Path to the generated JSON report.
+    value: ${{ steps.scan.outputs.json }}
+  markdown:
+    description: Path to the generated Markdown summary.
+    value: ${{ steps.scan.outputs.markdown }}
+  risk-score:
+    description: Highest risk score across scanned skills.
+    value: ${{ steps.scan.outputs['risk-score'] }}
+  risk-severity:
+    description: Highest risk severity across scanned skills.
+    value: ${{ steps.scan.outputs['risk-severity'] }}
+  findings-count:
+    description: Finding count after suppressions.
+    value: ${{ steps.scan.outputs['findings-count'] }}
+  scanned-count:
+    description: Number of skill targets scanned.
+    value: ${{ steps.scan.outputs['scanned-count'] }}
+
+runs:
+  using: composite
+  steps:
+    - name: Run SkillSpector
+      id: scan
+      shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_CHANGED_ONLY: ${{ inputs.changed-only }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_MIN_SCORE: ${{ inputs.min-score }}
+        INPUT_UPLOAD_SARIF: ${{ inputs.upload-sarif }}
+        INPUT_EXCLUDE: ${{ inputs.exclude }}
+        INPUT_BASELINE: ${{ inputs.baseline }}
+        INPUT_LLM: ${{ inputs.llm }}
+        INPUT_OUTPUT_DIR: skillspector-results
+        INPUT_IMAGE: ${{ inputs.image }}
+        ACTION_REF: ${{ github.action_ref }}
+        ACTION_REPOSITORY: ${{ github.action_repository }}
+      run: bash "$GITHUB_ACTION_PATH/scripts/run-action.sh"
+
+    - name: Upload SkillSpector reports
+      if: ${{ always() && inputs.artifact-name != '' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: skillspector-results
+        if-no-files-found: warn
+
+    - name: Upload SkillSpector SARIF
+      if: ${{ always() && inputs.upload-sarif == 'true' && steps.scan.outputs.sarif != '' }}
+      uses: github/codeql-action/upload-sarif@v4
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarif }}
+        category: skillspector
