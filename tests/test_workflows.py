@@ -24,8 +24,10 @@ def test_publish_workflow_pushes_ghcr_tags() -> None:
 
     assert "packages: write" in workflow
     assert "ghcr.io" in workflow
-    assert "docker/login-action" in workflow
-    assert "docker/build-push-action" in workflow
+    assert "docker/setup-buildx-action@v4" in workflow
+    assert "docker/login-action@v4" in workflow
+    assert "docker/metadata-action@v6" in workflow
+    assert "docker/build-push-action@v7" in workflow
     assert "type=semver,pattern={{version}}" in workflow
     assert "type=semver,pattern={{major}}" in workflow
     assert "type=semver,pattern=v{{version}}" in workflow
