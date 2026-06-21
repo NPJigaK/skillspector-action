@@ -47,6 +47,18 @@ Fail CI only for the severities you care about:
     upload-sarif: true
 ```
 
+## Status badge
+
+After adding the workflow, you can show the latest SkillSpector scan status in your README:
+
+```md
+[![SkillSpector scan](https://github.com/OWNER/REPO/actions/workflows/skillspector.yml/badge.svg?branch=main)](https://github.com/OWNER/REPO/actions/workflows/skillspector.yml?query=branch%3Amain)
+```
+
+Replace `OWNER`, `REPO`, and `main` for your repository. If you save the workflow with a different filename, replace `skillspector.yml` too.
+
+This badge shows the workflow status for the configured scan. It is not a security certification.
+
 ## What you get
 
 - Automatic `SKILL.md` discovery under `path`.
