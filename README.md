@@ -128,6 +128,10 @@ Use `pull_request`, not `pull_request_target`, when scanning untrusted pull requ
 
 For high-security environments, pin third-party actions to full commit SHAs.
 
+## License
+
+Apache License 2.0.
+
 ## More documentation
 
 - [Advanced usage](docs/advanced-usage.md): baseline, exclude patterns, LLM scans, and pinning.
