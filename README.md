@@ -55,6 +55,20 @@ Fail CI only for the severities you care about:
     upload-sarif: true
 ```
 
+## Version and update policy
+
+The recommended `@v1` reference is a moving major tag. After a compatible v1 release is reviewed, tested, and published, `@v1` moves to that release. Existing workflows using `NPJigaK/skillspector-action@v1` then automatically receive its SkillSpector engine updates and compatibility fixes without changing their workflow YAML.
+
+That convenience also has an operational impact: a newer scanner can add detections or change finding severities and risk scores, so workflows with `fail-on` or `min-score` thresholds may produce different results after a v1 release. Review the [release notes](https://github.com/NPJigaK/skillspector-action/releases) when the Action release badge changes.
+
+The upstream-latest badge updates when NVIDIA publishes a new GitHub Latest release. A weekly and manually dispatchable maintenance workflow compares that release with the bundled version and opens or refreshes an update pull request when needed. It validates the real scanner image before opening the PR; it does not merge the PR or publish a release automatically.
+
+Choose the reference that matches your update policy:
+
+- `NPJigaK/skillspector-action@v1` follows reviewed, compatible v1 releases automatically.
+- `NPJigaK/skillspector-action@v1.1.0` stays on that exact Action release until you edit the workflow.
+- `NPJigaK/skillspector-action@<full-commit-sha>` provides the strongest immutable pin for high-security or reproducible workflows.
+
 ## Status badge
 
 After adding the workflow, you can show the latest SkillSpector scan status in your README:
