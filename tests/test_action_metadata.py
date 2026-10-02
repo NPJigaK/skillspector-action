@@ -1,6 +1,15 @@
+import tomllib
 from pathlib import Path
 
 import yaml
+
+from skillspector_action import __version__
+
+
+def test_python_package_version_matches_runtime_version() -> None:
+    pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+
+    assert pyproject["project"]["version"] == __version__
 
 
 def test_action_metadata_declares_inputs_outputs_and_composite_runtime() -> None:
