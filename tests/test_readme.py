@@ -8,7 +8,9 @@ def test_readme_documents_core_usage_and_security_notes() -> None:
     assert "github/v/release/NPJigaK/skillspector-action" in readme
     assert "bundled%20SkillSpector-v2.12.0" in readme
     assert "github/v/release/NVIDIA/SkillSpector" in readme
+    assert "display_name=tag&sort=date&label=upstream%20latest" in readme
     assert "pinned to its full upstream commit" in readme
+    assert "c7958a3268d9498644b22edb75d0f051bbc8cbfc" in readme
     assert "NPJigaK/skillspector-action@v1" in readme
     assert "permissions:" in readme
     assert "security-events: write" in readme

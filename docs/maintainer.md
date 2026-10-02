@@ -63,6 +63,10 @@ When updating the pin:
 5. Smoke-test JSON and SARIF scans through the action wrapper.
 6. Confirm the PR CI builds the Docker image.
 
+The `Update SkillSpector` workflow performs this check weekly and can also be run manually. It follows the release selected by GitHub as upstream `latest`, resolves the tag to a full commit SHA, updates the pin and README badge together, validates the image, and opens or refreshes a single `automation/update-skillspector` pull request. Maintainers still review and merge that PR; the workflow never moves the pin directly on `main`.
+
+The repository's **Allow GitHub Actions to create and approve pull requests** setting must remain enabled for the workflow's scoped `GITHUB_TOKEN` to open the maintenance PR. The workflow does not approve or merge its PR.
+
 ## Development image override
 
 The hidden `image` input can be used to test an unpublished runtime image:
