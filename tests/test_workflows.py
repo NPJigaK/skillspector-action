@@ -46,4 +46,4 @@ def test_publish_workflow_pushes_ghcr_tags() -> None:
     assert "type=semver,pattern={{major}}" in workflow
     assert "type=semver,pattern=v{{version}}" in workflow
     assert "type=semver,pattern=v{{major}}" in workflow
-    assert "type=sha,prefix=sha-" in workflow
+    assert "type=sha,prefix=sha-,format=long" in workflow

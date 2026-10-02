@@ -39,7 +39,7 @@ jobs:
             type=semver,pattern={{major}}
             type=semver,pattern=v{{version}}
             type=semver,pattern=v{{major}}
-            type=sha,prefix=sha-
+            type=sha,prefix=sha-,format=long
 
       - name: Build and publish image
         uses: docker/build-push-action@v7
