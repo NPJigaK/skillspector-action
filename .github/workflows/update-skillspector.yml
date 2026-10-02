@@ -1,0 +1,83 @@
+name: Update SkillSpector
+
+on:
+  schedule:
+    # Check after the upstream release window on Monday; workflow_dispatch is
+    # available when maintainers want to pull a release immediately.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+# The updater commits only the generated pin changes and opens one stable PR.
+# The job below is also guarded by the canonical repository name so a fork
+# cannot use a scheduled/manual run to obtain write-capable automation.
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-skillspector
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.repository == 'NPJigaK/skillspector-action'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the trusted default branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          fetch-depth: 0
+          # The image under test contains newly fetched upstream code. Keep the
+          # write-capable token out of .git/config before mounting the checkout.
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+
+      - name: Resolve and apply the upstream release pin
+        id: pin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          python scripts/update-skillspector-version.py
+          --repo-root .
+          --github-output "$GITHUB_OUTPUT"
+
+      - name: Install test dependencies
+        if: steps.pin.outputs.changed == 'true'
+        run: python -m pip install -e ".[test]"
+
+      - name: Run unit tests
+        if: steps.pin.outputs.changed == 'true'
+        run: python -m pytest -q
+
+      - name: Build the updated scanner image
+        if: steps.pin.outputs.changed == 'true'
+        run: docker build -t skillspector-action:update-test .
+
+      - name: Smoke test the updated scanner image
+        if: steps.pin.outputs.changed == 'true'
+        run: bash scripts/smoke-test-image.sh skillspector-action:update-test
+
+      - name: Create or update the single maintenance PR
+        if: steps.pin.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          branch: automation/update-skillspector
+          delete-branch: false
+          title: "chore: update SkillSpector to ${{ steps.pin.outputs.version }}"
+          commit-message: "chore: update SkillSpector to ${{ steps.pin.outputs.version }}"
+          body: |
+            This PR updates the bundled NVIDIA/SkillSpector release to `${{ steps.pin.outputs.version }}`.
+
+            - Upstream tag: `${{ steps.pin.outputs.tag }}`
+            - Full commit: `${{ steps.pin.outputs.sha }}`
+            - Release: ${{ steps.pin.outputs.release_url }}
+            - GitHub prerelease: `${{ steps.pin.outputs.prerelease }}`
+
+            The updated image passed the repository's unit and scanner smoke tests before this PR was opened.
