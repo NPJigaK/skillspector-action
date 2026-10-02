@@ -29,3 +29,6 @@ jobs:
 
       - name: Build scanner image
         run: docker build -t skillspector-action:test .
+
+      - name: Smoke test scanner image
+        run: bash scripts/smoke-test-image.sh skillspector-action:test

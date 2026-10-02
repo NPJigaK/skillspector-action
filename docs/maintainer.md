@@ -50,14 +50,18 @@ That action ref resolves to the matching `v1` runtime image tag.
 
 ## SkillSpector pin
 
-The Dockerfile pins upstream SkillSpector with `SKILLSPECTOR_REF`.
+The Dockerfile records the bundled release with `SKILLSPECTOR_VERSION` and pins upstream SkillSpector to the release's full commit with `SKILLSPECTOR_REF`. The image build verifies that the installed package version matches the declared version.
+
+Use the upstream GitHub "Latest" release as the update source, then read its release notes and validate the action's JSON/SARIF adapter before moving the pin.
 
 When updating the pin:
 
-1. Update `Dockerfile`.
-2. Update `tests/test_workflows.py`.
-3. Run `python -m pytest -q`.
-4. Confirm the PR CI builds the Docker image.
+1. Update `SKILLSPECTOR_VERSION` and `SKILLSPECTOR_REF` in `Dockerfile`.
+2. Update the bundled-version badge and text in `README.md`.
+3. Update the expected version and ref in `tests/test_workflows.py`.
+4. Run `python -m pytest -q`.
+5. Smoke-test JSON and SARIF scans through the action wrapper.
+6. Confirm the PR CI builds the Docker image.
 
 ## Development image override
 

@@ -41,8 +41,8 @@ def merge_json_reports(
 
     for report in reports:
         scores.append(_risk_score(report))
-        severities.append(report.get("risk_severity") or report.get("severity") or "none")
-        findings.extend(_report_findings(report))
+        severities.append(_risk_severity(report))
+        findings.extend(extract_findings(report))
 
     finding_severities = [finding.get("severity", "none") for finding in findings]
     severity = highest_severity([*severities, *finding_severities])
@@ -114,15 +114,65 @@ def render_markdown_summary(summary: dict[str, Any]) -> str:
 
 
 def _risk_score(report: dict[str, Any]) -> int:
-    value = report.get("risk_score", report.get("score", 0))
+    value = report.get("risk_score")
+    if value is None:
+        value = report.get("score")
+    if value is None:
+        assessment = report.get("risk_assessment")
+        value = assessment.get("score", 0) if isinstance(assessment, dict) else 0
     try:
         return int(value)
     except (TypeError, ValueError):
         return 0
 
 
-def _report_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
+def _risk_severity(report: dict[str, Any]) -> Any:
+    value = report.get("risk_severity") or report.get("severity")
+    if value:
+        return value
+    assessment = report.get("risk_assessment")
+    if isinstance(assessment, dict):
+        return assessment.get("max_issue_severity") or assessment.get("severity") or "none"
+    return "none"
+
+
+def extract_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
     findings = report.get("filtered_findings")
     if findings is None:
         findings = report.get("findings")
-    return [finding for finding in findings or [] if isinstance(finding, dict)]
+    if findings is None:
+        findings = report.get("issues")
+    return [_normalize_finding(finding) for finding in findings or [] if isinstance(finding, dict)]
+
+
+def _normalize_finding(finding: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(finding)
+    if not normalized.get("rule_id"):
+        normalized["rule_id"] = finding.get("ruleId") or finding.get("rule") or finding.get("id") or ""
+    if not normalized.get("message"):
+        normalized["message"] = (
+            finding.get("description")
+            or finding.get("pattern")
+            or finding.get("finding")
+            or finding.get("explanation")
+            or ""
+        )
+    if not normalized.get("path"):
+        normalized["path"] = _finding_path(finding)
+    return normalized
+
+
+def _finding_path(finding: dict[str, Any]) -> str:
+    if finding.get("path"):
+        return str(finding["path"])
+    location = finding.get("location")
+    if isinstance(location, dict):
+        path = location.get("path") or location.get("file")
+        if path:
+            return str(path)
+    occurrences = finding.get("occurrences")
+    if isinstance(occurrences, list) and occurrences and isinstance(occurrences[0], dict):
+        path = occurrences[0].get("path") or occurrences[0].get("file")
+        if path:
+            return str(path)
+    return ""

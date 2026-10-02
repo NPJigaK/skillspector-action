@@ -1,6 +1,7 @@
 FROM python:3.12-slim-bookworm
 
-ARG SKILLSPECTOR_REF=a5092dd9b9521ff57a9b53612bb129ce78019002
+ARG SKILLSPECTOR_VERSION=2.12.0
+ARG SKILLSPECTOR_REF=c7958a3268d9498644b22edb75d0f051bbc8cbfc
 
 ENV PIP_NO_CACHE_DIR=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -13,7 +14,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python -m pip install --upgrade pip \
-    && python -m pip install "git+https://github.com/NVIDIA/SkillSpector.git@${SKILLSPECTOR_REF}"
+    && python -m pip install "git+https://github.com/NVIDIA/SkillSpector.git@${SKILLSPECTOR_REF}" \
+    && python -c "from importlib.metadata import version; assert version('skillspector') == '${SKILLSPECTOR_VERSION}'"
 
 COPY pyproject.toml README.md ./
 COPY src ./src

@@ -1,8 +1,16 @@
 # skillspector-action
 
+[![CI](https://img.shields.io/github/actions/workflow/status/NPJigaK/skillspector-action/ci.yml?branch=main&label=CI)](https://github.com/NPJigaK/skillspector-action/actions/workflows/ci.yml?query=branch%3Amain)
+[![Action release](https://img.shields.io/github/v/release/NPJigaK/skillspector-action?display_name=tag&sort=semver&label=action)](https://github.com/NPJigaK/skillspector-action/releases/latest)
+[![Bundled SkillSpector](https://img.shields.io/badge/bundled%20SkillSpector-v2.12.0-76B900?logo=nvidia&logoColor=white)](https://github.com/NVIDIA/SkillSpector/releases/tag/v2.12.0)
+[![Upstream latest](https://img.shields.io/github/v/release/NVIDIA/SkillSpector?display_name=tag&sort=semver&label=upstream%20latest)](https://github.com/NVIDIA/SkillSpector/releases/latest)
+[![License](https://img.shields.io/github/license/NPJigaK/skillspector-action)](LICENSE)
+
 Scan AI agent skills with [NVIDIA SkillSpector](https://github.com/NVIDIA/SkillSpector) from GitHub Actions.
 
 This action is for skill authors and skill registry maintainers who want a simple CI check for `SKILL.md` repositories. It runs static analysis by default, uploads reports, and only fails CI when you ask it to.
+
+The runtime image currently bundles SkillSpector **v2.12.0**, pinned to its full upstream commit for reproducible builds. Compare the bundled and upstream-latest badges to see whether an update is available. Updates are tested before the pinned version is moved.
 
 ## Quick start
 

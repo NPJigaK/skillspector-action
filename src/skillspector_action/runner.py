@@ -12,7 +12,14 @@ from .baseline import filter_baselined_findings, is_baselined_finding
 from .config import Config
 from .discovery import discover_skill_targets, targets_for_changed_files
 from .gitdiff import changed_files_from_git, fetch_ref
-from .reports import highest_severity, merge_json_reports, merge_sarif_reports, normalize_severity, render_markdown_summary
+from .reports import (
+    extract_findings,
+    highest_severity,
+    merge_json_reports,
+    merge_sarif_reports,
+    normalize_severity,
+    render_markdown_summary,
+)
 
 Scanner = Callable[[Path, Path, bool], "ScanResult"]
 
@@ -37,7 +44,7 @@ def run_action(config: Config, scanner: Scanner | None = None) -> int:
         for target in targets:
             result = scanner(target, work_dir, config.llm)
             report = dict(result.json_report)
-            findings = _extract_findings(report)
+            findings = extract_findings(report)
             active, suppressed = filter_baselined_findings(findings, config.baseline)
             _replace_findings(report, active, had_original_findings=bool(findings))
             suppressed_findings.extend(suppressed)
@@ -68,13 +75,19 @@ def run_skillspector(target: Path, work_dir: Path, use_llm: bool) -> ScanResult:
 
     base = ["skillspector", "scan", str(target)]
     no_llm = [] if use_llm else ["--no-llm"]
-    subprocess.run([*base, *no_llm, "--format", "json", "--output", str(json_path)], check=True)
-    subprocess.run([*base, *no_llm, "--format", "sarif", "--output", str(sarif_path)], check=True)
+    _run_scan_command([*base, *no_llm, "--format", "json", "--output", str(json_path)], json_path)
+    _run_scan_command([*base, *no_llm, "--format", "sarif", "--output", str(sarif_path)], sarif_path)
 
     return ScanResult(
         json_report=json.loads(json_path.read_text(encoding="utf-8")),
         sarif_report=json.loads(sarif_path.read_text(encoding="utf-8")),
     )
+
+
+def _run_scan_command(command: list[str], report_path: Path) -> None:
+    completed = subprocess.run(command, check=False)
+    if completed.returncode not in {0, 1} or not report_path.is_file():
+        raise subprocess.CalledProcessError(completed.returncode, command)
 
 
 def should_fail(summary: dict[str, Any], fail_on: str, min_score: int | None) -> bool:
@@ -136,13 +149,6 @@ def _files_relative_to_scan_root(config: Config, changed_files: list[str]) -> li
     return result
 
 
-def _extract_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
-    findings = report.get("filtered_findings")
-    if findings is None:
-        findings = report.get("findings")
-    return [finding for finding in findings or [] if isinstance(finding, dict)]
-
-
 def _replace_findings(
     report: dict[str, Any],
     findings: list[dict[str, Any]],
@@ -150,16 +156,45 @@ def _replace_findings(
 ) -> None:
     if "filtered_findings" in report:
         report["filtered_findings"] = findings
+    elif "findings" in report:
+        report["findings"] = findings
+    elif "issues" in report:
+        report["issues"] = findings
     else:
         report["findings"] = findings
     if had_original_findings and not findings:
         report["risk_score"] = 0
         report["risk_severity"] = "none"
+        _update_risk_assessment(report, score=0, severity="none")
     elif findings:
-        report["risk_severity"] = highest_severity([finding.get("severity", "none") for finding in findings])
+        severity = highest_severity([finding.get("severity", "none") for finding in findings])
+        report["risk_severity"] = severity
         scores = [_finding_score(finding) for finding in findings]
         if any(score is not None for score in scores):
-            report["risk_score"] = max(score for score in scores if score is not None)
+            score = max(score for score in scores if score is not None)
+            report["risk_score"] = score
+            _update_risk_assessment(report, score=score, severity=severity)
+        else:
+            _update_risk_assessment(report, severity=severity)
+
+
+def _update_risk_assessment(
+    report: dict[str, Any],
+    *,
+    score: int | None = None,
+    severity: str | None = None,
+) -> None:
+    assessment = report.get("risk_assessment")
+    if not isinstance(assessment, dict):
+        return
+    if score is not None:
+        assessment["score"] = score
+    if severity is not None:
+        normalized = normalize_severity(severity)
+        assessment["max_issue_severity"] = normalized.upper()
+        if score == 0:
+            assessment["severity"] = "LOW"
+            assessment["recommendation"] = "SAFE"
 
 
 def _finding_score(finding: dict[str, Any]) -> int | None:
@@ -188,9 +223,18 @@ def _filter_sarif_report(report: dict[str, Any], baseline_path: Path | None) -> 
 def _finding_from_sarif_result(result: dict[str, Any]) -> dict[str, Any]:
     message = result.get("message", {})
     text = message.get("text", "") if isinstance(message, dict) else ""
+    properties = result.get("properties", {})
+    if isinstance(properties, dict):
+        text = (
+            properties.get("description")
+            or properties.get("pattern")
+            or properties.get("finding")
+            or properties.get("explanation")
+            or text
+        )
     return {
         "rule_id": result.get("ruleId", ""),
-        "message": text,
+        "message": str(text),
         "path": _sarif_result_path(result),
     }
 
