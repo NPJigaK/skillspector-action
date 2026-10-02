@@ -4,6 +4,11 @@ from pathlib import Path
 def test_readme_documents_core_usage_and_security_notes() -> None:
     readme = Path("README.md").read_text(encoding="utf-8")
 
+    assert "github/actions/workflow/status/NPJigaK/skillspector-action/ci.yml" in readme
+    assert "github/v/release/NPJigaK/skillspector-action" in readme
+    assert "bundled%20SkillSpector-v2.12.0" in readme
+    assert "github/v/release/NVIDIA/SkillSpector" in readme
+    assert "pinned to its full upstream commit" in readme
     assert "NPJigaK/skillspector-action@v1" in readme
     assert "permissions:" in readme
     assert "security-events: write" in readme
