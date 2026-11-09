@@ -1,8 +1,8 @@
 from pathlib import Path
 
 
-PINNED_SKILLSPECTOR_VERSION = "2.12.0"
-PINNED_SKILLSPECTOR_REF = "c7958a3268d9498644b22edb75d0f051bbc8cbfc"
+PINNED_SKILLSPECTOR_VERSION = "2.13.4"
+PINNED_SKILLSPECTOR_REF = "54824463814a0be01360792523ec7245a69190fc"
 
 
 def test_dockerfile_pins_skillspector_ref() -> None:
